@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot MJ</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./persona.js" defer></script>
+    <script src="./script.js" defer></script>
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <img class="brand-logo" src="./assets/campuslands-banner.png" alt="Campuslands" onerror="this.style.display='none'">
+            <nav class="tabs">
+                <button type="button" class="tab active" data-view="chat">Chat</button>
+                <button type="button" class="tab" data-view="persona">Ficha del agente</button>
+            </nav>
+        </div>
+        <div class="settings">
+            <span id="agentBadge" class="agent-badge"></span>
+            <select name="modeloSelect" id="modeloSelect" title="Modelo" aria-label="Modelo de IA">
+                <option value="gpt-4o-mini" selected>Rápido</option>
+                <option value="gpt-4.1-mini">Equilibrado</option>
+                <option value="gpt-4o">Preciso</option>
+            </select>
+            <button id="keyBtn" type="button" class="ghost" title="API key">Clave</button>
+            <button id="clearChatBtn" class="ghost" title="Borrar Conversación">Borrar</button>
+        </div>
+    </header>
+
+    <dialog id="keyDialog" class="key-dialog" aria-labelledby="keyTitle">
+        <form method="dialog" class="key-form">
+            <h2 id="keyTitle">API key de OpenAI</h2>
+            <p>Se guarda solo en este navegador y nunca en el código. Cualquiera con acceso a este equipo podría usarla; para un uso público lo ideal es un servidor intermedio (ver <code>PROXY_URL</code> en <code>script.js</code>).</p>
+            <label for="keyInput">Pega tu clave (empieza por <code>sk-</code>)</label>
+            <input id="keyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-...">
+            <div class="key-actions">
+                <button id="keyClear" type="button" class="ghost">Quitar clave</button>
+                <span class="spacer"></span>
+                <button id="keyClose" type="button" class="ghost">Cerrar</button>
+                <button id="keySave" type="submit">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <main class="chat" id="chatView">
+        <div id="messages" class="messages" aria-live="polite"></div>
+        <form id="composer" class="composer" autocomplete="off">
+            <textarea name="prompt" id="prompt" maxlength="1000" placeholder="Escribe tu mensaje aquí y presiona Enter..." required></textarea>
+            <div class="composer-actions">
+                <button id="sendBtn" type="submit">Enviar</button>
+            </div>
+        </form>
+    </main>
+
+    <section class="persona" id="personaView" hidden>
+        <div class="studio-head">
+            <div>
+                <h1>Estudio de personalidad</h1>
+                <p>Diseña a tu agente y el prompt se escribe solo.</p>
+            </div>
+            <div class="archetypes">
+                <span class="lbl">Arquetipo</span>
+                <div id="presetCards" class="chips"></div>
+            </div>
+        </div>
+        <div class="io-bar">
+            <button type="button" id="exportFicha" class="ghost small">Exportar ficha</button>
+            <button type="button" id="importFicha" class="ghost small">Importar ficha</button>
+            <input type="file" id="importFile" accept="application/json,.json" hidden>
+            <span id="ioMsg" class="io-msg" role="status"></span>
+        </div>
+
+        <div class="studio">
+            <div class="steps">
+                <article class="step">
+                    <header><span class="num">01</span><h2>Identidad</h2></header>
+                    <div class="two">
+                        <div class="field"><label for="f-nombre">Nombre</label><input id="f-nombre" type="text" autocomplete="off"></div>
+                        <div class="field"><label for="f-rol">Rol / puesto</label><input id="f-rol" type="text" autocomplete="off"></div>
+                    </div>
+                    <div class="field"><label for="f-objetivo">Misión <span id="cnt-objetivo" class="cnt"></span></label><textarea id="f-objetivo" rows="3"></textarea></div>
+                </article>
+
+                <article class="step">
+                    <header><span class="num">02</span><h2>Carácter</h2></header>
+                    <div id="traits" class="traits"></div>
+                </article>
+
+                <article class="step">
+                    <header><span class="num">03</span><h2>Lo que sabe</h2><small>mínimo 3 datos · Enter para añadir</small></header>
+                    <div id="tags-dominio" class="tags"></div>
+                </article>
+
+                <article class="step">
+                    <header><span class="num">04</span><h2>Su voz</h2></header>
+                    <div class="two">
+                        <div class="field"><label for="f-tono">Tono</label><input id="f-tono" type="text" autocomplete="off"></div>
+                        <div class="field"><label for="f-lenguaje">Lenguaje</label><input id="f-lenguaje" type="text" autocomplete="off"></div>
+                    </div>
+                </article>
+
+                <article class="step">
+                    <header><span class="num">05</span><h2>Reglas rojas</h2><small>lo que nunca debe hacer</small></header>
+                    <div id="tags-limites" class="tags danger"></div>
+                </article>
+
+                <button type="button" id="resetPersona" class="ghost reset">Restablecer arquetipo</button>
+            </div>
+
+            <aside class="side">
+                <div class="idcard">
+                    <div class="idcard-top">
+                        <div class="avatar-xl"><span id="avatarLetter">A</span></div>
+                        <div class="idcard-id">
+                            <strong id="cardName"></strong>
+                            <span id="cardRole"></span>
+                        </div>
+                    </div>
+                    <div id="radarBox"></div>
+                    <div id="traitLegend" class="legend"></div>
+                    <button type="button" id="tryChat" class="cta wide">Probar en el chat →</button>
+                </div>
+
+                <div class="tester">
+                    <h3>Prueba rápida</h3>
+                    <p>Mira cómo respondería con esta ficha, sin salir de aquí.</p>
+                    <div class="tester-row">
+                        <input id="testQ" type="text" autocomplete="off" aria-label="Pregunta de prueba" value="Explícame qué es una variable">
+                        <button type="button" id="testGo">Probar</button>
+                    </div>
+                    <div id="testOut" class="tester-out bubble md" hidden></div>
+                </div>
+
+                <div class="quality">
+                    <div class="quality-top"><span id="qualityLabel"></span><b id="qualityPct"></b></div>
+                    <div class="bar"><div id="qualityFill" class="fill"></div></div>
+                    <div id="dots" class="dots" aria-hidden="true"></div>
+                    <ul id="pending" class="pending"></ul>
+                </div>
+            </aside>
+        </div>
+    </section>
+</body>
+
+</html>
