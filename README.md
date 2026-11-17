@@ -50,3 +50,7 @@ Los horarios, temas y fechas del arquetipo *Profesor* son **ficticios**. Reempl�
 - Modelos disponibles: lista en `index.html` (`Rápido`, `Equilibrado`, `Preciso`).
 - Límites de tokens, mensajes y memoria: constantes al inicio de `script.js`.
 - Preguntas sugeridas del chat: lista `SUGGESTIONS` en `script.js`.
+
+## Licencia
+
+Distribuido bajo la [licencia MIT](LICENSE).
