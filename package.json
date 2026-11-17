@@ -1,0 +1,13 @@
+{
+  "name": "chatbot-mj",
+  "version": "2.0.0",
+  "description": "ChatBot MJ: chat con agente de personalidad configurable, cuentas gestionadas por el administrador y la API key solo en el servidor.",
+  "license": "MIT",
+  "private": true,
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node scripts/dev.js",
+    "test": "node --test"
+  }
+}

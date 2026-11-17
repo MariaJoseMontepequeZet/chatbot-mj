@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-fs="1">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <title>ChatBot MJ</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./shared/prompt.js" defer></script>
+    <script src="./js/api.js" defer></script>
+    <script src="./js/ui.js" defer></script>
+    <script src="./js/auth.js" defer></script>
+    <script src="./js/chat.js" defer></script>
+    <script src="./js/persona.js" defer></script>
+    <script src="./js/admin.js" defer></script>
+    <script src="./js/app.js" defer></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+
+    <!-- Carga inicial -->
+    <div id="boot" class="boot" role="status" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Cargando…</p>
+    </div>
+
+    <!-- Inicio de sesión -->
+    <main id="loginView" class="auth-screen" hidden>
+        <form id="loginForm" class="auth-card" autocomplete="on">
+            <img class="auth-logo" src="./assets/campuslands-banner.png" alt="Campuslands" onerror="this.style.display='none'">
+            <h1>ChatBot MJ</h1>
+            <p class="auth-sub">Ingresa con la cuenta que te dio tu administrador.</p>
+            <label for="loginUser">Usuario</label>
+            <input id="loginUser" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+            <label for="loginPass">Contraseña</label>
+            <div class="pw-row">
+                <input id="loginPass" type="password" autocomplete="current-password" required>
+                <button type="button" class="ghost small" id="loginShow" aria-pressed="false">Ver</button>
+            </div>
+            <p id="loginError" class="form-error" role="alert" hidden></p>
+            <button type="submit" id="loginBtn" class="cta wide">Entrar</button>
+            <p class="auth-note">¿No tienes cuenta o olvidaste tu contraseña? Pídesela al administrador: no hay registro público.</p>
+            <p class="auth-note">Tus conversaciones se guardan y el equipo docente puede revisarlas para mejorar el agente.</p>
+        </form>
+    </main>
+
+    <!-- Cambio de contraseña obligatorio / voluntario -->
+    <main id="pwView" class="auth-screen" hidden>
+        <form id="pwForm" class="auth-card" autocomplete="off">
+            <h1 id="pwTitle">Crea tu contraseña</h1>
+            <p id="pwSub" class="auth-sub">Es tu primer ingreso: elige una contraseña propia (mínimo 8 caracteres, con letras y números).</p>
+            <label for="pwCurrent">Contraseña actual</label>
+            <input id="pwCurrent" type="password" autocomplete="current-password" required>
+            <label for="pwNew">Contraseña nueva</label>
+            <input id="pwNew" type="password" autocomplete="new-password" required minlength="8">
+            <label for="pwConfirm">Repite la contraseña nueva</label>
+            <input id="pwConfirm" type="password" autocomplete="new-password" required minlength="8">
+            <p id="pwError" class="form-error" role="alert" hidden></p>
+            <button type="submit" class="cta wide">Guardar contraseña</button>
+            <button type="button" id="pwCancel" class="ghost wide" hidden>Cancelar</button>
+            <button type="button" id="pwLogout" class="ghost wide">Cerrar sesión</button>
+        </form>
+    </main>
+
+    <!-- Aplicación -->
+    <div id="app" hidden>
+        <header class="app-header">
+            <div class="brand">
+                <img class="brand-logo" src="./assets/campuslands-banner.png" alt="Campuslands" onerror="this.style.display='none'">
+                <nav class="tabs" aria-label="Secciones">
+                    <button type="button" class="tab active" data-view="chat">Chat</button>
+                    <button type="button" class="tab admin-only" data-view="persona" hidden>Ficha del agente</button>
+                    <button type="button" class="tab admin-only" data-view="admin" hidden>Administración</button>
+                </nav>
+            </div>
+            <div class="settings">
+                <span id="agentBadge" class="agent-badge" title="Agente activo"></span>
+                <select id="modeloSelect" class="admin-only" title="Modelo de IA" aria-label="Modelo de IA" hidden>
+                    <option value="gpt-4o-mini" selected>Rápido</option>
+                    <option value="gpt-4.1-mini">Equilibrado</option>
+                    <option value="gpt-4o">Preciso</option>
+                </select>
+                <button type="button" id="fontDown" class="ghost icon-btn" aria-label="Reducir letra" title="Reducir letra">A−</button>
+                <button type="button" id="fontUp" class="ghost icon-btn" aria-label="Aumentar letra" title="Aumentar letra">A+</button>
+                <button type="button" id="themeBtn" class="ghost" aria-pressed="false">Tema claro</button>
+                <div class="user-menu">
+                    <button type="button" id="userBtn" class="ghost" aria-haspopup="true" aria-expanded="false"></button>
+                    <div id="userPanel" class="user-panel" hidden>
+                        <div class="user-panel-name" id="userPanelName"></div>
+                        <div class="user-panel-role" id="userPanelRole"></div>
+                        <button type="button" id="changePwBtn" class="ghost wide">Cambiar contraseña</button>
+                        <button type="button" id="logoutBtn" class="ghost wide">Cerrar sesión</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Chat -->
+        <main class="chat-layout" id="chatView">
+            <aside class="history" id="history" aria-label="Conversaciones">
+                <div class="history-head">
+                    <strong>Conversaciones</strong>
+                    <button type="button" id="newChatBtn" class="small">+ Nueva</button>
+                </div>
+                <ul id="historyList" class="history-list"></ul>
+            </aside>
+            <section class="chat" id="main-content">
+                <div class="chat-bar">
+                    <button type="button" id="historyToggle" class="ghost small history-toggle" aria-expanded="false" aria-controls="history">Historial</button>
+                    <span id="chatTitle" class="chat-title"></span>
+                    <span class="spacer"></span>
+                    <span id="usageChip" class="usage-chip" hidden></span>
+                    <button type="button" id="exportChat" class="ghost small" hidden>Exportar</button>
+                </div>
+                <div id="messages" class="messages" aria-live="polite" aria-relevant="additions"></div>
+                <form id="composer" class="composer" autocomplete="off">
+                    <label for="prompt" class="sr-only">Escribe tu mensaje</label>
+                    <textarea name="prompt" id="prompt" maxlength="1000" rows="1" placeholder="Escribe tu mensaje aquí y presiona Enter…" required></textarea>
+                    <div class="composer-actions">
+                        <span id="charCount" class="char-count" aria-hidden="true"></span>
+                        <button id="sendBtn" type="submit">Enviar</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+
+        <!-- Ficha del agente (solo administrador) -->
+        <section class="persona" id="personaView" hidden>
+            <div class="studio-head">
+                <div>
+                    <h1>Estudio de personalidad</h1>
+                    <p>Diseña a tu agente y el prompt se arma solo en el servidor.</p>
+                </div>
+                <div class="archetypes">
+                    <span class="lbl">Plantilla</span>
+                    <div id="presetCards" class="chips"></div>
+                </div>
+            </div>
+
+            <div class="agent-bar">
+                <label for="agentSelect">Agente</label>
+                <select id="agentSelect"></select>
+                <button type="button" id="newAgent" class="ghost small">Nuevo agente</button>
+                <span class="spacer"></span>
+                <input id="saveNote" type="text" maxlength="120" placeholder="Nota de la versión (opcional)" aria-label="Nota de la versión">
+                <button type="button" id="saveAgent">Guardar nueva versión</button>
+                <button type="button" id="deleteAgent" class="ghost small danger">Eliminar</button>
+            </div>
+            <div class="io-bar">
+                <button type="button" id="exportFicha" class="ghost small">Exportar ficha</button>
+                <button type="button" id="importFicha" class="ghost small">Importar ficha</button>
+                <input type="file" id="importFile" accept="application/json,.json" hidden>
+                <span id="ioMsg" class="io-msg" role="status"></span>
+                <span id="dirtyMsg" class="io-msg warn" role="status"></span>
+            </div>
+
+            <div class="studio">
+                <div class="steps">
+                    <article class="step">
+                        <header><span class="num">01</span><h2>Identidad</h2></header>
+                        <div class="two">
+                            <div class="field"><label for="f-nombre">Nombre</label><input id="f-nombre" type="text" maxlength="80" autocomplete="off"></div>
+                            <div class="field"><label for="f-rol">Rol / puesto</label><input id="f-rol" type="text" maxlength="200" autocomplete="off"></div>
+                        </div>
+                        <div class="field"><label for="f-objetivo">Misión <span id="cnt-objetivo" class="cnt"></span></label><textarea id="f-objetivo" rows="3" maxlength="2000"></textarea></div>
+                    </article>
+
+                    <article class="step">
+                        <header><span class="num">02</span><h2>Carácter</h2></header>
+                        <div id="traits" class="traits"></div>
+                    </article>
+
+                    <article class="step">
+                        <header><span class="num">03</span><h2>Lo que sabe</h2><small>mínimo 3 datos · Enter para añadir</small></header>
+                        <div id="tags-dominio" class="tags"></div>
+                        <p class="hint">Conocimiento general del agente. Los horarios, temas y fechas de cada cohorte se cargan en <b>Administración → Grupos</b>.</p>
+                    </article>
+
+                    <article class="step">
+                        <header><span class="num">04</span><h2>Su voz</h2></header>
+                        <div class="two">
+                            <div class="field"><label for="f-tono">Tono</label><input id="f-tono" type="text" maxlength="200" autocomplete="off"></div>
+                            <div class="field"><label for="f-lenguaje">Lenguaje</label><input id="f-lenguaje" type="text" maxlength="200" autocomplete="off"></div>
+                        </div>
+                    </article>
+
+                    <article class="step">
+                        <header><span class="num">05</span><h2>Reglas rojas</h2><small>lo que nunca debe hacer</small></header>
+                        <div id="tags-limites" class="tags danger"></div>
+                    </article>
+
+                    <button type="button" id="resetPersona" class="ghost reset">Restablecer plantilla</button>
+                </div>
+
+                <aside class="side">
+                    <div class="idcard">
+                        <div class="idcard-top">
+                            <div class="avatar-xl"><span id="avatarLetter">A</span></div>
+                            <div class="idcard-id">
+                                <strong id="cardName"></strong>
+                                <span id="cardRole"></span>
+                            </div>
+                        </div>
+                        <div id="radarBox"></div>
+                        <div id="traitLegend" class="legend"></div>
+                    </div>
+
+                    <div class="tester">
+                        <h3>Prueba rápida</h3>
+                        <p>Mira cómo respondería con esta ficha, sin guardarla.</p>
+                        <div class="field"><label for="testGroup">Con los datos del grupo</label><select id="testGroup"></select></div>
+                        <div class="tester-row">
+                            <input id="testQ" type="text" maxlength="1000" autocomplete="off" aria-label="Pregunta de prueba" value="Explícame qué es una variable">
+                            <button type="button" id="testGo">Probar</button>
+                        </div>
+                        <div id="testOut" class="tester-out bubble md" hidden></div>
+                    </div>
+
+                    <div class="quality">
+                        <div class="quality-top"><span id="qualityLabel"></span><b id="qualityPct"></b></div>
+                        <div class="bar"><div id="qualityFill" class="fill"></div></div>
+                        <div id="dots" class="dots" aria-hidden="true"></div>
+                        <ul id="pending" class="pending"></ul>
+                    </div>
+
+                    <div class="versions">
+                        <h3>Versiones guardadas</h3>
+                        <ul id="versionList" class="version-list"></ul>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- Administración (solo administrador) -->
+        <section class="admin" id="adminView" hidden>
+            <div class="admin-head">
+                <h1>Administración</h1>
+                <nav id="adminTabs" class="subtabs" aria-label="Secciones de administración">
+                    <button type="button" class="subtab active" data-admin="users">Usuarios</button>
+                    <button type="button" class="subtab" data-admin="groups">Grupos</button>
+                    <button type="button" class="subtab" data-admin="usage">Consumo</button>
+                    <button type="button" class="subtab" data-admin="convs">Conversaciones</button>
+                    <button type="button" class="subtab" data-admin="audit">Actividad</button>
+                    <button type="button" class="subtab" data-admin="settings">Ajustes</button>
+                </nav>
+            </div>
+            <div id="adminBody" class="admin-body"></div>
+        </section>
+    </div>
+
+    <!-- Contraseñas temporales (se muestran una sola vez) -->
+    <dialog id="secretsDialog" class="modal" aria-labelledby="secretsTitle">
+        <form method="dialog" class="modal-form">
+            <h2 id="secretsTitle"></h2>
+            <p id="secretsIntro" class="hint"></p>
+            <div id="secretsBody" class="modal-scroll"></div>
+            <div class="modal-actions">
+                <button type="button" id="secretsCopy" class="ghost">Copiar</button>
+                <button type="button" id="secretsCsv" class="ghost">Descargar CSV</button>
+                <span class="spacer"></span>
+                <button type="submit">Listo</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+
+</html>
