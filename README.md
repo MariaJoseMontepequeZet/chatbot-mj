@@ -8,6 +8,10 @@ Hecho con HTML, CSS y JavaScript puro: sin dependencias ni paso de compilación.
 
 *Conversación de ejemplo con el agente Kirunel (datos ficticios).*
 
+![Captura de la ficha del agente](docs/ficha.png)
+
+*Estudio de personalidad: rasgos Big Five, dominio, voz y reglas, con radar y barra de calidad.*
+
 ## Qué incluye
 
 - **Chat** con respuestas en streaming, formato de texto y bloques de código con botón de copiar, botón para detener y reintentar, y conversación guardada al recargar.
