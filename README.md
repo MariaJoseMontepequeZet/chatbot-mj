@@ -4,6 +4,10 @@ Chat con un agente de IA cuya **personalidad se configura desde una ficha**. Al 
 
 Hecho con HTML, CSS y JavaScript puro: sin dependencias ni paso de compilación.
 
+![Captura del chat de ChatBot MJ](docs/chat.png)
+
+*Conversación de ejemplo con el agente Kirunel (datos ficticios).*
+
 ## Qué incluye
 
 - **Chat** con respuestas en streaming, formato de texto y bloques de código con botón de copiar, botón para detener y reintentar, y conversación guardada al recargar.

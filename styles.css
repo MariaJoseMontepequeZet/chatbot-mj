@@ -487,3 +487,6 @@ button.ghost:hover { border-color: var(--accent); color: #fff; }
 .trait-en, .ticks, .archetypes .lbl, .cnt, .step header small, .chip-area { color: #8ea0a3; }
 .field label { color: #b0bec1; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* El código en bloque no usa el estilo del código en línea */
+.bubble.md .codeblock pre code { background: transparent; border: none; padding: 0; border-radius: 0; color: #d7f5f0; font: 12.5px/1.55 ui-monospace, Consolas, monospace; white-space: pre; }
